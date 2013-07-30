@@ -23,7 +23,11 @@ Ext.application({
     name: 'AndroidLMS',
 
     requires: [
-        'Ext.MessageBox'
+        'Ext.MessageBox',
+        'Ext.tab.Panel',
+        'Ext.form.*',
+        'Ext.field.*',
+        'Ext.data.*'
     ],
 
     views: [
