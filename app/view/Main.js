@@ -16,14 +16,21 @@ Ext.define('AndroidLMS.view.Main', {
                 styleHtmlContent: true,
                 scrollable: true,
 
-                items: {
+                items: [{
                     docked: 'top',
                     xtype: 'titlebar',
-                    title: 'Welcome to Sencha Touch 2'
-                },
+                    title: 'Welcome to the LMS App'
+		    },
+		    {
+		    xtype: "button",
+		    text: "View Contacts",
+		    ui: "action",
+		    id:"new-contact-btn"
+		    }
+		],
 
                 html: [
-		    "<a href=\"javascript:navigator.notification.alert('Congratulations, you are ready to work with Sencha Touch 2 and PhoneGap!')\">Click me</a> to see a native Android Alert message",
+		    "<a href=\"javascript:navigator.notification.alert('Congratulations, you are ready to work with Sencha Touch 2 and PhoneGap!')\">Click me</a> to see a native Android Alert message",		    
 		].join("")
             },
             {

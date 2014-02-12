@@ -27,11 +27,25 @@ Ext.application({
         'Ext.tab.Panel',
         'Ext.form.*',
         'Ext.field.*',
-        'Ext.data.*'
+        'Ext.data.*',
+        'Ext.Panel',
+        'Ext.dataview.List'
     ],
+    
+    controllers: [
+        'ContactsController'
+    ],
+    
+    models: [
+        'Contact'
+    ],
+    
+    stores: ['Contacts'],
 
     views: [
-        'Main'
+        'Main',
+        'ContactsPanel',
+        'ContactsContainer'
     ],
 
     icon: {
@@ -55,9 +69,15 @@ Ext.application({
     launch: function() {
         // Destroy the #appLoadingIndicator element
         Ext.fly('appLoadingIndicator').destroy();
+        
+        var main = {xtype:"main"};
+        var contactsContainer = {xtype:"contactscontainer"};
+        var contactsPanel = {xtype:"contactspanel"};
 
         // Initialize the main view
-        Ext.Viewport.add(Ext.create('AndroidLMS.view.Main'));
+        //Ext.Viewport.add(Ext.create('AndroidLMS.view.Main'));
+        //Ext.Viewport.add(Ext.create('AndroidLMS.view.ContactsContainer'));
+        Ext.Viewport.add([ contactsContainer, contactsPanel]);
     },
 
     onUpdated: function() {

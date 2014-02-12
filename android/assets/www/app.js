@@ -77206,14 +77206,21 @@ Ext.define('AndroidLMS.view.Main', {
                 styleHtmlContent: true,
                 scrollable: true,
 
-                items: {
+                items: [{
                     docked: 'top',
                     xtype: 'titlebar',
-                    title: 'Welcome to Sencha Touch 2'
-                },
+                    title: 'Welcome to the LMS App'
+		    },
+		    {
+		    xtype: "button",
+		    text: "View Contacts",
+		    ui: "action",
+		    id:"new-contact-btn"
+		    }
+		],
 
                 html: [
-		    "<a href=\"javascript:navigator.notification.alert('Congratulations, you are ready to work with Sencha Touch 2 and PhoneGap!')\">Click me</a> to see a native Android Alert message",
+		    "<a href=\"javascript:navigator.notification.alert('Congratulations, you are ready to work with Sencha Touch 2 and PhoneGap!')\">Click me</a> to see a native Android Alert message",		    
 		].join("")
             },
             {
@@ -77308,6 +77315,152 @@ Ext.define('AndroidLMS.view.Main', {
     }
 });
 
+Ext.define("AndroidLMS.view.ContactsContainer", {
+    extend:  Ext.Container ,
+    alias: "widget.contactscontainer",
+    
+    config: {
+        layout: {type: 'fit'}  
+        /*
+        items: [{
+            xtype: "toolbar",
+            docked: "top",
+            title: "My Contacts Container",
+            items: [{
+                xtype: "spacer"
+            }, {
+                xtype: "button",
+                text: "New",
+                ui: "action",
+                id:"new-contact-btn"
+            }]
+        }]
+        
+    */
+    },
+    initialize: function(){
+        this.callParent(arguments);
+        var newButton = {
+            xtype: "button",
+            text: 'New',
+            ui: 'action',
+            handler: this.onNewButtonTap,
+            scope:this
+        };
+        
+        var toolbar = {
+            xtype: 'toolbar',
+            title: 'Citrix Course Catalog',
+            docked: 'top',
+            items: [
+                {xtype:'spacer'} ,
+                newButton
+            ]
+        };
+        
+        var contactsPanel = {
+            xtype: 'contactspanel',
+            store: Ext.getStore("Contacts"),
+            listeners: {
+                disclose: {fn: this.onContactsPanelDisclose, scope:this}
+            }
+        }
+        
+        this.add([toolbar, contactsPanel]);
+    },
+    
+    onNewButtonTap: function(){
+        console.log("New Button taop");
+        this.fireEvent("newContactCommand", this);
+    },
+    
+    onContactsPanelDisclose: function(list, record, target, index, evt, options){
+        console.log("edit Contact Command");
+        this.fireEvent('editContactCommand', this, record);
+    }
+});
+
+Ext.define('AndroidLMS.view.ContactsPanel', {
+    extend:  Ext.dataview.List ,
+    alias: 'widget.contactspanel',
+    
+    config: {        
+        loadingText: 'Loading contacts.',
+        emptyText: '</pre><div class="notes-list-empty-text">No notes found.</div><pre>',
+        onItemDisclosure: true,
+        itemTpl: '</pre><div class="list-item-title">{title}</div><div class="list-item-narrative">{narrative}</div><pre>'
+    },
+    
+    initialize:function(){
+        this.callParent(arguments);
+    }
+});
+
+Ext.define("AndroidLMS.controller.ContactsController", {
+    extend:  Ext.app.Controller ,
+    config: {
+        animation: 'slide',
+        slideLeftTransition: { type: 'slide', direction: 'left' },
+        refs: {
+            //newContactBtn: "#contactLink"
+            newContactBtn: "#new-contact-btn",
+            contactsContainer: "contactscontainer",
+            contactsPanel: "contactspanel"
+        },
+        control: {
+            newContactCommand: "onNewContact",
+            editContactCommand: "onEditContact"
+        }
+    },
+    onNewContact: function () {
+        console.log("onNewContact");
+    },
+    launch: function(){
+        this.callParent(arguments);
+        console.log("CC launch");
+        Ext.getStore("Contacts").load();
+    },
+    init: function(){
+        this.callParent(arguments);
+        console.log("CC init");
+    }
+    
+
+    // init and launch functions omitted.
+});
+
+Ext.define("AndroidLMS.model.Contact", {
+    extend:  Ext.data.Model ,
+    config: {
+        idProperty: 'id',
+        fields: [
+            {name: 'id', type: 'int'},
+            {name: 'dateCreated', type:'date', dateFormat: 'c'},
+            {name: 'title', type:'string'},
+            {name: 'narrative', type:'string'}
+        ]
+    },
+    
+    validations: [
+        {type: 'presence', field: 'id'},
+        {type: 'presence', field: 'dateCreated'},
+        {type: 'presence', field: 'title', message: 'Enter a title for this note'}
+    ]
+});
+
+Ext.define("AndroidLMS.store.Contacts", {
+    extend:  Ext.data.Store ,
+    config: {
+        model: "AndroidLMS.model.Contact",
+        data: [
+            {title: "CTX-000", narrative: "XenApp Test Course"},
+            {title: "CTX-001", narrative: "XenMobile Test Course"},
+            {title: "CTX-002", narrative: "XenDesktop Test Course"}
+        ]
+    },
+    sorters: [{property: 'dateCreated', direction:'DESC'}]
+});
+
 /*
     This file is generated and updated by Sencha Cmd. You can edit this file as
     needed for your application, but these edits will have to be merged by
@@ -77332,11 +77485,25 @@ Ext.application({
                         
                      
                       
+                     
                     
+                           
       
+    
+    controllers: [
+        'ContactsController'
+    ],
+    
+    models: [
+        'Contact'
+    ],
+    
+    stores: ['Contacts'],
 
     views: [
-        'Main'
+        'Main',
+        'ContactsPanel',
+        'ContactsContainer'
     ],
 
     icon: {
@@ -77360,9 +77527,15 @@ Ext.application({
     launch: function() {
         // Destroy the #appLoadingIndicator element
         Ext.fly('appLoadingIndicator').destroy();
+        
+        var main = {xtype:"main"};
+        var contactsContainer = {xtype:"contactscontainer"};
+        var contactsPanel = {xtype:"contactspanel"};
 
         // Initialize the main view
-        Ext.Viewport.add(Ext.create('AndroidLMS.view.Main'));
+        //Ext.Viewport.add(Ext.create('AndroidLMS.view.Main'));
+        //Ext.Viewport.add(Ext.create('AndroidLMS.view.ContactsContainer'));
+        Ext.Viewport.add([ contactsContainer, contactsPanel]);
     },
 
     onUpdated: function() {

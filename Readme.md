@@ -10,7 +10,7 @@ sencha app build testing
 
 Things to know:
 - build.xml (after build queries)
-- build-impl.xml
+- build-impl.xml (.sencha)
 
 Sources:
 http://andidog.de/blog/2012/06/packaging-a-sencha-touch-2-application-with-phonegap-for-android/
