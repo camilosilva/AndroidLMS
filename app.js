@@ -45,7 +45,8 @@ Ext.application({
     views: [
         'Main',
         'ContactsPanel',
-        'ContactsContainer'
+        'ContactsContainer',
+        'ContactsEditor'
     ],
 
     icon: {
@@ -73,11 +74,12 @@ Ext.application({
         var main = {xtype:"main"};
         var contactsContainer = {xtype:"contactscontainer"};
         var contactsPanel = {xtype:"contactspanel"};
+        var contactsEditor = {xtype:"contactseditor"};
 
         // Initialize the main view
         //Ext.Viewport.add(Ext.create('AndroidLMS.view.Main'));
         //Ext.Viewport.add(Ext.create('AndroidLMS.view.ContactsContainer'));
-        Ext.Viewport.add([ contactsContainer, contactsPanel]);
+        Ext.Viewport.add([ contactsContainer, contactsPanel, contactsEditor]);
     },
 
     onUpdated: function() {

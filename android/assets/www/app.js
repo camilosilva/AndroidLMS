@@ -77370,7 +77370,7 @@ Ext.define("AndroidLMS.view.ContactsContainer", {
     },
     
     onNewButtonTap: function(){
-        console.log("New Button taop");
+        console.log("New Button TAP");
         this.fireEvent("newContactCommand", this);
     },
     
@@ -77386,9 +77386,10 @@ Ext.define('AndroidLMS.view.ContactsPanel', {
     
     config: {        
         loadingText: 'Loading contacts.',
-        emptyText: '</pre><div class="notes-list-empty-text">No notes found.</div><pre>',
+        emptyText: '<pre><div class="notes-list-empty-text">No contacts found.</div></pre>',
         onItemDisclosure: true,
-        itemTpl: '</pre><div class="list-item-title">{title}</div><div class="list-item-narrative">{narrative}</div><pre>'
+        grouped: true,
+        itemTpl: '<pre><div class="list-item-title">{title}</div><div class="list-item-narrative">{narrative}</div></pre>'
     },
     
     initialize:function(){
@@ -77396,33 +77397,210 @@ Ext.define('AndroidLMS.view.ContactsPanel', {
     }
 });
 
+Ext.define("AndroidLMS.view.ContactsEditor", {
+    extend:  Ext.form.Panel ,
+                                  
+    alias: "widget.contactseditor",
+    config:{
+        scrollable:'vertical'
+    },
+    initialize: function(){
+        this.callParent(arguments);
+        var backButton = {
+            xtype:"button",
+            ui: "back",
+            text: "Home",
+            handler: this.onBackHomeTap,
+            scope: this
+        };
+        
+        var saveButton = {
+            xtype: "button",
+            ui: "action",
+            text: "Save",
+            handler: this.onSaveButtonTap,
+            scope: this
+        }
+        
+        var topToolbar = {
+            xtype: "toolbar",
+            docked: "top",
+            title: "Edit Contact",
+            items: [backButton,{xtype:"spacer"},saveButton]
+        };
+        
+        var deleteButton = {
+            xtype:"button",
+            iconCls:"trash",
+            iconMask: true,
+            handler: this.onDeleteButtonTap,
+            scope: this
+        };
+        
+        var bottomToolbar = {
+            xtype: "toolbar",
+            docked: "bottom",
+            items: [deleteButton]
+        };
+        
+        var contactTitleEditor = {
+            xtype: 'textfield',
+            name: 'title',
+            label: 'Title',
+            required: true
+        };
+        
+        var contactNarrativeEditor = {
+            xtype:"textareafield",
+            name:"narrative",
+            label:"Narrative"
+        };
+        
+        this.add([
+            topToolbar
+            ,{xtype:'fieldset', items:[contactTitleEditor, contactNarrativeEditor]}
+            ,bottomToolbar
+        ]);
+    },
+    
+    onSaveButtonTap: function(){
+        console.log("saveBiteCommand");
+        this.fireEvent("saveContactCommand", this);
+    },
+    
+    onBackHomeTap: function(){
+        console.log("Home pressed");
+        this.fireEvent("backHomeCommand", this);
+    },
+    
+    onDeleteButtonTap: function(){
+        console.log("delete pressed");
+        this.fireEvent("deleteButtonCommand", this);
+    }
+});
+
 Ext.define("AndroidLMS.controller.ContactsController", {
     extend:  Ext.app.Controller ,
+    
+    //slide animations
+    slideLeftTransition: { type: 'slide', direction: 'left'},
+    slideRightTransition: {type: 'slide', direction:'right'},
+    
+    //Config settings
     config: {
         animation: 'slide',
-        slideLeftTransition: { type: 'slide', direction: 'left' },
+        
         refs: {
-            //newContactBtn: "#contactLink"
-            newContactBtn: "#new-contact-btn",
             contactsContainer: "contactscontainer",
-            contactsPanel: "contactspanel"
+            contactsPanel: "contactspanel",
+            contactsEditor: "contactseditor"
         },
         control: {
-            newContactCommand: "onNewContact",
-            editContactCommand: "onEditContact"
+            //controller actions for the ContactsContainer view
+            contactsContainer: {
+                newContactCommand: "onNewContact",
+                editContactCommand: "onEditContact"    
+            },
+            
+            contactsEditor: {
+                saveContactCommand: "onSaveContactCommand",
+                backHomeCommand: "onBackHomeCommand",
+                deleteButtonCommand: "onDeleteCommand"
+            }
+            
         }
     },
+    
+    onDeleteCommand:function(){
+        var contactEditor = this.getContactsEditor();
+        var currentContact = contactEditor.getRecord();
+        var contactStore = Ext.getStore("Contacts");
+        
+        contactStore.remove(currentContact);
+        contactStore.sync();
+        
+        this.activateContactsContainer();
+    },
+    
+    onBackHomeCommand: function(){
+        console.log("back home was pressed");
+        this.activateContactsContainer();
+    },
+    
+    onSaveContactCommand: function(){
+        console.log("onSaveContact Command");
+        
+        var contactEditor = this.getContactsEditor();
+        var currentContact = contactEditor.getRecord();
+        var newValues = contactEditor.getValues();
+        
+        currentContact.set("title", newValues.title);
+        currentContact.set("narrative", newValues.narrative);
+        
+        var errors = currentContact.validate();
+        
+        if(!errors.isValid()) {
+            Ext.Msg.alert('Wait', errors.getByField("title")[0].getMessage(), Ext.emptyFn);
+            currentContact.reject();
+            return;
+        }
+        
+        var contactsStore = Ext.getStore("Contacts");
+        
+        //Check if note exists, if not add it
+        if(null == contactsStore.findRecord('id', currentContact.data.id)){
+            contactsStore.add(currentContact);
+        }
+        
+        contactsStore.sync();
+        contactsStore.sort([{property:'dateCreated', direction:'DESC'}]);
+        
+        this.activateContactsContainer();
+    },
+    
+    onEditContact: function(list, record) {
+        console.log("onEditConact");
+        this.activateContactEditor(record);
+    },
+    
     onNewContact: function () {
         console.log("onNewContact");
+        var now = new Date();
+        var cId = (now.getTime()).toString() +
+            (this.getRandomInt(0,100)).toString();
+        
+        var newContact = Ext.create("AndroidLMS.model.Contact", {
+            id: cId,
+            dateCreated:now,
+            narrative: "",
+            title: ""
+        });
+        this.activateContactEditor(newContact);
     },
+    
     launch: function(){
         this.callParent(arguments);
         console.log("CC launch");
         Ext.getStore("Contacts").load();
     },
+    
     init: function(){
         this.callParent(arguments);
         console.log("CC init");
+    },
+    
+    getRandomInt: function(min,max){
+        return Math.floor(Math.random()*(max-min+1))+min;
+    },
+    
+    activateContactEditor: function(record){
+        var contactsEditor = this.getContactsEditor();
+        contactsEditor.setRecord(record);
+        Ext.Viewport.animateActiveItem(contactsEditor, this.slideLeftTransition);
+    },
+    
+    activateContactsContainer: function(){
+        Ext.Viewport.animateActiveItem(this.getContactsContainer(),this.slideRightTransition);
     }
     
 
@@ -77450,15 +77628,36 @@ Ext.define("AndroidLMS.model.Contact", {
 
 Ext.define("AndroidLMS.store.Contacts", {
     extend:  Ext.data.Store ,
+                                            
+    
     config: {
         model: "AndroidLMS.model.Contact",
+        proxy: {
+            type: "localstorage",
+            id: "notes-app-store"
+        }
+        //hardcoded data
+        /*
         data: [
             {title: "CTX-000", narrative: "XenApp Test Course"},
             {title: "CTX-001", narrative: "XenMobile Test Course"},
             {title: "CTX-002", narrative: "XenDesktop Test Course"}
         ]
+        */
     },
-    sorters: [{property: 'dateCreated', direction:'DESC'}]
+    
+    sorters: [{property: 'dateCreated', direction:'DESC'}],
+    grouper:{
+        sortProperty:"dateCreated",
+        direction:"DESC",
+        groupFn: function(record){
+            if(record && record.data.dateCreated){
+                return record.data.dateCreated.toDateString();
+            } else {
+                return '';
+            }            
+        }
+    }
 });
 
 /*
@@ -77503,7 +77702,8 @@ Ext.application({
     views: [
         'Main',
         'ContactsPanel',
-        'ContactsContainer'
+        'ContactsContainer',
+        'ContactsEditor'
     ],
 
     icon: {
@@ -77531,11 +77731,12 @@ Ext.application({
         var main = {xtype:"main"};
         var contactsContainer = {xtype:"contactscontainer"};
         var contactsPanel = {xtype:"contactspanel"};
+        var contactsEditor = {xtype:"contactseditor"};
 
         // Initialize the main view
         //Ext.Viewport.add(Ext.create('AndroidLMS.view.Main'));
         //Ext.Viewport.add(Ext.create('AndroidLMS.view.ContactsContainer'));
-        Ext.Viewport.add([ contactsContainer, contactsPanel]);
+        Ext.Viewport.add([ contactsContainer, contactsPanel, contactsEditor]);
     },
 
     onUpdated: function() {

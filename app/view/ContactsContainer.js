@@ -53,7 +53,7 @@ Ext.define("AndroidLMS.view.ContactsContainer", {
     },
     
     onNewButtonTap: function(){
-        console.log("New Button taop");
+        console.log("New Button TAP");
         this.fireEvent("newContactCommand", this);
     },
     
