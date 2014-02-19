@@ -1,4 +1,4 @@
-Ext.define("AndroidLMS.model.Contact", {
+Ext.define("AndroidLMS.model.CitrixContact", {
     extend: "Ext.data.Model",
     config: {
         idProperty: 'id',
@@ -8,14 +8,12 @@ Ext.define("AndroidLMS.model.Contact", {
             {name: 'title', type:'string'},
             {name: 'narrative', type:'string'}
         ],
-        proxy: new Ext.data.LocalStorageProxy({id: 'notes-app-store'}),
+        //add the proxy here
         validations: [
             {type: 'presence', field: 'id'},
             {type: 'presence', field: 'dateCreated'},
             {type: 'presence', field: 'title', message: 'Enter a title for this note'}
         ],
     },
-    
-    
     
 });

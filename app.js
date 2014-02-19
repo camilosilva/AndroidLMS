@@ -33,20 +33,25 @@ Ext.application({
     ],
     
     controllers: [
-        'ContactsController'
+        'ContactsController',
+        'CitrixContactsController'
     ],
     
     models: [
-        'Contact'
+        'Contact',
+        'CitrixContact'
     ],
     
-    stores: ['Contacts'],
+    stores: ['Contacts','CitrixContacts'],
 
     views: [
         'Main',
         'ContactsPanel',
         'ContactsContainer',
-        'ContactsEditor'
+        'ContactsEditor',
+        'CitrixContactEditor',
+        'CitrixContactItem',
+        'CitrixContactsList'
     ],
 
     icon: {
@@ -75,11 +80,21 @@ Ext.application({
         var contactsContainer = {xtype:"contactscontainer"};
         var contactsPanel = {xtype:"contactspanel"};
         var contactsEditor = {xtype:"contactseditor"};
+        var citrixList = {xtype:"citrixlist"};
+        var citrixEditor = {xtype:"citrixeditor"};
+        var citrixItem = {xtype:"citrixitem"};
 
         // Initialize the main view
         //Ext.Viewport.add(Ext.create('AndroidLMS.view.Main'));
         //Ext.Viewport.add(Ext.create('AndroidLMS.view.ContactsContainer'));
-        Ext.Viewport.add([ contactsContainer, contactsPanel, contactsEditor]);
+        Ext.Viewport.add([
+            contactsContainer
+            ,contactsPanel
+            ,contactsEditor
+            ,citrixList
+            ,citrixItem
+            ,citrixEditor
+        ]);
     },
 
     onUpdated: function() {

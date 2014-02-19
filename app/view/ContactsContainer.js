@@ -47,9 +47,23 @@ Ext.define("AndroidLMS.view.ContactsContainer", {
             listeners: {
                 disclose: {fn: this.onContactsPanelDisclose, scope:this}
             }
-        }
+        };
         
-        this.add([toolbar, contactsPanel]);
+        var addressButton = {
+            xtype:"button",
+            text:"Citrix Contacts",
+            iconCls:"user",
+            handler: this.onAddressButtonTap,
+            scope: this
+        };
+        
+        var bottomToolbar = {
+            xtype: "toolbar",
+            docked: "bottom",
+            items: [addressButton]
+        };
+        
+        this.add([toolbar, contactsPanel, bottomToolbar]);
     },
     
     onNewButtonTap: function(){
@@ -60,5 +74,10 @@ Ext.define("AndroidLMS.view.ContactsContainer", {
     onContactsPanelDisclose: function(list, record, target, index, evt, options){
         console.log("edit Contact Command");
         this.fireEvent('editContactCommand', this, record);
+    },
+    
+    onAddressButtonTap:function(){
+        console.log("Address button tapped");
+        this.fireEvent('showCitrixContactsCommand', this);
     }
 });
