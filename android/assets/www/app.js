@@ -77364,9 +77364,23 @@ Ext.define("AndroidLMS.view.ContactsContainer", {
             listeners: {
                 disclose: {fn: this.onContactsPanelDisclose, scope:this}
             }
-        }
+        };
         
-        this.add([toolbar, contactsPanel]);
+        var addressButton = {
+            xtype:"button",
+            text:"Citrix Contacts",
+            iconCls:"user",
+            handler: this.onAddressButtonTap,
+            scope: this
+        };
+        
+        var bottomToolbar = {
+            xtype: "toolbar",
+            docked: "bottom",
+            items: [addressButton]
+        };
+        
+        this.add([toolbar, contactsPanel, bottomToolbar]);
     },
     
     onNewButtonTap: function(){
@@ -77377,6 +77391,11 @@ Ext.define("AndroidLMS.view.ContactsContainer", {
     onContactsPanelDisclose: function(list, record, target, index, evt, options){
         console.log("edit Contact Command");
         this.fireEvent('editContactCommand', this, record);
+    },
+    
+    onAddressButtonTap:function(){
+        console.log("Address button tapped");
+        this.fireEvent('showCitrixContactsCommand', this);
     }
 });
 
@@ -77476,6 +77495,96 @@ Ext.define("AndroidLMS.view.ContactsEditor", {
     onDeleteButtonTap: function(){
         console.log("delete pressed");
         this.fireEvent("deleteButtonCommand", this);
+    }
+});
+
+Ext.define("AndroidLMS.view.CitrixContactsList", {
+    extend:  Ext.Container ,
+    alias: "widget.citrixlist",
+    config:{
+        scrollable:'vertical',
+        layout: {type: 'fit'}
+    },
+    initialize: function(){
+        this.callParent(arguments);
+        var backButton = {
+            xtype: "button",
+            text: "Back",
+            ui: 'back',
+            handler: this.onBackButtonTap,
+            scope: this
+        };
+        
+        var newButton = {
+            xtype: "button",
+            text: "New",
+            ui: "action",
+            handler: this.onNewButtonTap,
+            scope: this
+        }
+        
+        var toolbar = {
+            xtype: 'toolbar',
+            title: 'My Citrix Contacts',
+            docked: 'top',
+            items: [
+                backButton,
+                {xtype:"spacer"},
+                newButton
+            ]
+        }
+        
+        var citrixItem = {
+            xtype: 'citrixitem',
+            store: Ext.getStore('CitrixContacts'),
+            
+            listeners: {
+                disclose: {fn: this.onContactsPanelDisclose, scope:this}
+            }
+            
+        };
+        
+        this.add([toolbar, citrixItem]);
+    },
+    
+    onNewButtonTap: function(){
+        console.log("New Button TAP");
+        //this.fireEvent("newContactCommand", this);
+    },
+    
+    onBackButtonTap: function(){
+        console.log("Back Button Pressed");
+        this.fireEvent('goToMainScreen', this);
+    },
+    
+    onContactsPanelDisclose: function(list, record, target, index, evt, options){
+        console.log("edit Contact Command");
+        //this.fireEvent('editContactCommand', this, record);
+    }
+});
+
+Ext.define("AndroidLMS.view.CitrixContactEditor", {
+    extend:  Ext.Container ,
+    alias: "widget.citrixeditor",
+    config:{
+        scrollable:'vertical'
+    }
+});
+
+Ext.define("AndroidLMS.view.CitrixContactItem", {
+    extend:  Ext.dataview.List ,
+    alias: 'widget.citrixitem',
+    
+    config: {        
+        loadingText: 'Loading contacts.',
+        emptyText: '<pre><div class="notes-list-empty-text">No contacts found.</div></pre>',
+        onItemDisclosure: true,
+        grouped: true,
+        itemTpl: '<pre><div class="list-item-title">{givenName} {familyName}</div><div class="list-item-narrative">Company Name</div></pre>'
+    },
+    
+    initialize:function(){
+        this.callParent(arguments);
     }
 });
 
@@ -77607,6 +77716,73 @@ Ext.define("AndroidLMS.controller.ContactsController", {
     // init and launch functions omitted.
 });
 
+Ext.define("AndroidLMS.controller.CitrixContactsController",{
+    extend: Ext.app.Controller ,
+    //slide animations
+    slideLeftTransition: { type: 'slide', direction: 'left'},
+    slideRightTransition: {type: 'slide', direction:'right'},
+    
+    config: {
+        animation: 'slide',
+        
+        refs: {
+            citrixList: "citrixlist",
+            citrixItem: "citrixitem",
+            citrixEditor: "citrixeditor",
+            contactsContainer: "contactscontainer"
+        },
+        
+        control: {
+            contactsContainer:{
+                showCitrixContactsCommand: "onShowCitrixContacts"
+            },
+            citrixList:{
+                goToMainScreen: "onGoToMainScreen"
+            }
+        }
+    },
+    
+    onGoToMainScreen: function(){
+        this.activateContactsContainer();
+    },
+    
+    onShowCitrixContacts: function(){
+        console.log("Citrix Contacts pressed!");
+        this.activateCitrixList();
+    },
+    
+    launch: function(){
+        this.callParent(arguments);
+        console.log("CitixController launch");
+        Ext.getStore("CitrixContacts").load();
+    },
+    
+    init: function(){
+        this.callParent(arguments);
+        console.log("Citrix Controller init");
+    },
+    
+    getRandomInt: function(min,max){
+        return Math.floor(Math.random()*(max-min+1))+min;
+    },
+    
+    activateCitrixEditor: function(record){
+        var citrixEditor = this.getCitrixEditor();
+        citrixEditor.setRecord(record);
+        Ext.Viewport.animateActiveItem(citrixEditor, this.slideLeftTransition);
+    },
+    
+    activateContactsContainer: function(){
+        Ext.Viewport.animateActiveItem(this.getContactsContainer(),this.slideRightTransition);
+    },
+    
+    activateCitrixList: function(){
+        Ext.Viewport.animateActiveItem(this.getCitrixList(),this.slideRightTransition);
+    }
+    
+    
+});
+
 Ext.define("AndroidLMS.model.Contact", {
     extend:  Ext.data.Model ,
     config: {
@@ -77617,7 +77793,7 @@ Ext.define("AndroidLMS.model.Contact", {
             {name: 'title', type:'string'},
             {name: 'narrative', type:'string'}
         ],
-        proxy: new Ext.data.LocalStorageProxy({id: 'notes-app-store'}),
+        //proxy: new Ext.data.LocalStorageProxy({id: 'notes-app-store'}),
         validations: [
             {type: 'presence', field: 'id'},
             {type: 'presence', field: 'dateCreated'},
@@ -77626,6 +77802,104 @@ Ext.define("AndroidLMS.model.Contact", {
     },
     
     
+    
+});
+
+Ext.define('AndroidLMS.proxy.CitrixContactProxy',{
+    extend:  Ext.data.proxy.Proxy ,
+    alias: 'proxy.citrixContactProxy',
+    config: {
+        model: 'AndroidLMS.model.CitrixContact'
+    },
+    read: function(operation, callback, scope){
+        var thisProxy = this;
+        console.log('Proxy**');
+        
+        /*
+        var contacts = [];
+        for (var i = 0; i < 3; i++){
+            var contact = Ext.create(thisProxy.config.model,{
+                id: i,
+                givenName: "Test " + i,
+                familyName: "Last name " + i
+            });
+            contacts.push(contact);
+        }
+        
+        operation.setSuccessful();
+        operation.setCompleted();
+        
+        operation.setResultSet(Ext.create('Ext.data.ResultSet',{
+            records: contacts,
+            total: contacts.length,
+            loaded: true
+        }));
+        
+        
+        operation.setRecords(contacts);
+        
+        if(typeof callback == "function"){
+            callback.call(scope || thisProxy, operation);
+        }
+        */
+        
+        
+        navigator.contacts.find(['id', 'name', 'emails', 'phoneNumbers', 'addresses'],
+            function(deviceContacts){
+                //loop over the device contacts and create the CitrixContact Model
+                var contacts = [];
+                for (var i = 0; i < deviceContacts.length; i++){
+                    var deviceContact = deviceContacts[i];
+                    var contact = Ext.create(thisProxy.config.model,{
+                        id: deviceContact.id,
+                        givenName: deviceContact.name.givenName,
+                        familyName: deviceContact.name.familyName
+                    });
+                    contact.deviceContact = deviceContact;
+                    contacts.push(contact);
+                }
+                
+                operation.setSuccessful();
+                operation.setCompleted();
+                
+                operation.setResultSet(Ext.create('Ext.data.ResultSet',{
+                    records: contacts,
+                    total: contacts.length
+                }));
+                
+                operation.setRecords(contacts);
+                
+                if(typeof callback == "function"){
+                    callback.call(scope || thisProxy, operation);
+                }
+            },
+            function(e){console.log('Error while fetching the contacts from the phone');},
+            {multiple:true, filter: "Silva"}
+        );
+        
+    }
+});
+
+Ext.define("AndroidLMS.model.CitrixContact", {
+    extend:  Ext.data.Model ,
+                                                    
+    config: {
+        idProperty: 'id',
+        fields: [
+            {name: 'id', type: 'int'},
+            //{name: 'dateCreated', type:'date', dateFormat: 'c'},
+            {name:'givenName', type: 'string'},
+            {name:'familyName', type: 'string'}
+        ],
+        proxy: {type:'citrixContactProxy'},
+        
+        validations: [
+            {type: 'presence', field: 'id'},
+            {type: 'presence', field: 'givenName'},
+            {type: 'presence', field: 'familyName', message: 'Enter a lastname'}
+        ],
+        
+    }
     
 });
 
@@ -77668,6 +77942,36 @@ Ext.define("AndroidLMS.store.Contacts", {
     
 });
 
+Ext.define("AndroidLMS.store.CitrixContacts", {
+    extend:  Ext.data.Store ,
+                                                    
+    
+    config: {
+        model: "AndroidLMS.model.CitrixContact",
+        proxy: {
+            type: "citrixContactProxy",
+            //id: "citrix-contacts"
+        },
+        
+        sorters: [{property: 'givenName', direction:'DESC'}],
+        grouper:{
+            sortProperty:"givenName",
+            direction:"DESC",
+            groupFn: function(record){
+                if(record && record.data.givenName){
+                    return record.data.givenName.charAt(0);
+                } else {
+                    return '';
+                }            
+            },
+            
+            getGroupString: function (record) {
+                return '';
+            }
+        }
+    }   
+});
+
 /*
     This file is generated and updated by Sencha Cmd. You can edit this file as
     needed for your application, but these edits will have to be merged by
@@ -77698,20 +78002,25 @@ Ext.application({
       
     
     controllers: [
-        'ContactsController'
+        'ContactsController',
+        'CitrixContactsController'
     ],
     
     models: [
-        'Contact'
+        'Contact',
+        'CitrixContact'
     ],
     
-    stores: ['Contacts'],
+    stores: ['Contacts','CitrixContacts'],
 
     views: [
         'Main',
         'ContactsPanel',
         'ContactsContainer',
-        'ContactsEditor'
+        'ContactsEditor',
+        'CitrixContactEditor',
+        'CitrixContactItem',
+        'CitrixContactsList'
     ],
 
     icon: {
@@ -77740,11 +78049,21 @@ Ext.application({
         var contactsContainer = {xtype:"contactscontainer"};
         var contactsPanel = {xtype:"contactspanel"};
         var contactsEditor = {xtype:"contactseditor"};
+        var citrixList = {xtype:"citrixlist"};
+        var citrixEditor = {xtype:"citrixeditor"};
+        var citrixItem = {xtype:"citrixitem"};
 
         // Initialize the main view
         //Ext.Viewport.add(Ext.create('AndroidLMS.view.Main'));
         //Ext.Viewport.add(Ext.create('AndroidLMS.view.ContactsContainer'));
-        Ext.Viewport.add([ contactsContainer, contactsPanel, contactsEditor]);
+        Ext.Viewport.add([
+            contactsContainer
+            ,contactsPanel
+            ,contactsEditor
+            ,citrixList
+            ,citrixItem
+            ,citrixEditor
+        ]);
     },
 
     onUpdated: function() {

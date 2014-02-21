@@ -8,7 +8,7 @@ Ext.define("AndroidLMS.model.Contact", {
             {name: 'title', type:'string'},
             {name: 'narrative', type:'string'}
         ],
-        proxy: new Ext.data.LocalStorageProxy({id: 'notes-app-store'}),
+        //proxy: new Ext.data.LocalStorageProxy({id: 'notes-app-store'}),
         validations: [
             {type: 'presence', field: 'id'},
             {type: 'presence', field: 'dateCreated'},

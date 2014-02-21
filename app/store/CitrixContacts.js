@@ -1,20 +1,21 @@
 Ext.define("AndroidLMS.store.CitrixContacts", {
     extend: "Ext.data.Store",
-    requires: "Ext.data.proxy.LocalStorage",
+    requires: "AndroidLMS.proxy.CitrixContactProxy",
     
     config: {
         model: "AndroidLMS.model.CitrixContact",
         proxy: {
-            type: "localstorage",
-            id: "notes-app-store1"
-        },  
-        sorters: [{property: 'dateCreated', direction:'DESC'}],
+            type: "citrixContactProxy",
+            //id: "citrix-contacts"
+        },
+        
+        sorters: [{property: 'givenName', direction:'DESC'}],
         grouper:{
-            sortProperty:"dateCreated",
+            sortProperty:"givenName",
             direction:"DESC",
             groupFn: function(record){
-                if(record && record.data.dateCreated){
-                    return record.data.dateCreated.toDateString();
+                if(record && record.data.givenName){
+                    return record.data.givenName.charAt(0);
                 } else {
                     return '';
                 }            
@@ -24,7 +25,5 @@ Ext.define("AndroidLMS.store.CitrixContacts", {
                 return '';
             }
         }
-    },
-    
-    
+    }   
 });

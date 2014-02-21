@@ -1,19 +1,22 @@
 Ext.define("AndroidLMS.model.CitrixContact", {
     extend: "Ext.data.Model",
+    requires: "AndroidLMS.proxy.CitrixContactProxy",
     config: {
         idProperty: 'id',
         fields: [
             {name: 'id', type: 'int'},
-            {name: 'dateCreated', type:'date', dateFormat: 'c'},
-            {name: 'title', type:'string'},
-            {name: 'narrative', type:'string'}
+            //{name: 'dateCreated', type:'date', dateFormat: 'c'},
+            {name:'givenName', type: 'string'},
+            {name:'familyName', type: 'string'}
         ],
-        //add the proxy here
+        proxy: {type:'citrixContactProxy'},
+        
         validations: [
             {type: 'presence', field: 'id'},
-            {type: 'presence', field: 'dateCreated'},
-            {type: 'presence', field: 'title', message: 'Enter a title for this note'}
+            {type: 'presence', field: 'givenName'},
+            {type: 'presence', field: 'familyName', message: 'Enter a lastname'}
         ],
-    },
+        
+    }
     
 });

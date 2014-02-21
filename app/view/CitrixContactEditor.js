@@ -3,5 +3,5 @@ Ext.define("AndroidLMS.view.CitrixContactEditor", {
     alias: "widget.citrixeditor",
     config:{
         scrollable:'vertical'
-    },
+    }
 });
